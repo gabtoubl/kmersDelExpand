@@ -35,7 +35,7 @@ static int usage() {
 
 int main(int ac, char **av) {
   vector<unordered_map<size_t, int> > kmers;
-  bool flagInfile, flagOutfile, flagOpt;
+  bool flagInfile = false, flagOutfile = false, flagOpt = false;
   size_t maxThreads = 1, maxLine, kLen;
   ifstream infile;
   ofstream outfile;
