@@ -12,24 +12,23 @@ extern string seed;
 
 static void computeKmers(unordered_map<size_t, int> &kmers, vector<string> lines,
 			 size_t limitLine) {
-  size_t found, kmerInt;
+  size_t badNuc, kmerInt;
   string kmer, line;
+  bool isBadNuc;
 
-  k = seed.length() > 0 ? seed.length() : k;
+  k = seed == "" ? k : seed.length();
   for (size_t l = 0; l < limitLine; ++l) {
     line = lines[l];
+    isBadNuc = (line.find_first_not_of("ACGT") != string::npos);
     for (size_t i = 0; i + k <= line.length(); ++i) {
       kmerInt = 0;
       kmer = "";
-      if (seed == "")
-	kmer = line.substr(i, k);
-      else
-	for (size_t j = 0; j < k; ++j)
-	  if (seed[j] != '0')
-	    kmer += line[i + j];
-      if ((found = kmer.find_first_not_of("ACGT")) != string::npos) {
+      for (size_t j = 0; j < k; ++j)
+	if (seed[j] != '0')
+	  kmer += line[i + j];
+      if (isBadNuc && (badNuc = kmer.find_first_not_of("ACGT")) != string::npos) {
 	if (seed == "")
-	  i += found;
+	  i += badNuc;
       }
       else {
 	for (auto&& c: kmer) {
