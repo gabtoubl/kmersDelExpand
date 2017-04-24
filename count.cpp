@@ -61,7 +61,7 @@ void kmersCount(ifstream &infile, vector<unordered_map<size_t, int> > &kmers,
   vector<vector<string> > chunks;
   vector<future<void> > futs(maxThreads);
   vector<bool> inUse;
-  size_t curThread, curLine;
+  size_t curThread = 0, curLine = 0;
 
   if (seed != "")
     cerr << "Starting with seed " << seed;
