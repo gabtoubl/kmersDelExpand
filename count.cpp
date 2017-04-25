@@ -10,7 +10,7 @@ using namespace std;
 extern size_t k;
 extern string seed;
 
-static void computeKmers(unordered_map<size_t, int> &kmers, vector<string> lines,
+static void computeKmers(unordered_map<size_t, size_t> &kmers, vector<string> lines,
 			 size_t limitLine) {
   size_t badNuc, kmerInt;
   string kmer, line;
@@ -45,7 +45,7 @@ static void computeKmers(unordered_map<size_t, int> &kmers, vector<string> lines
   }
 }
 
-static void startNewThread(unordered_map<size_t, int> &kmers, vector<string> &chunk, future<void> &fut,
+static void startNewThread(unordered_map<size_t, size_t> &kmers, vector<string> &chunk, future<void> &fut,
 			   vector<bool> &inUse, size_t &curThread, size_t &curLine) {
   if (inUse[curThread]) {
     fut.get();
@@ -56,7 +56,7 @@ static void startNewThread(unordered_map<size_t, int> &kmers, vector<string> &ch
   inUse[curThread] = true;
 }
 
-void kmersCount(ifstream &infile, vector<unordered_map<size_t, int> > &kmers,
+void kmersCount(ifstream &infile, vector<unordered_map<size_t, size_t> > &kmers,
 		size_t &maxThreads, size_t &maxLine) {
   vector<vector<string> > chunks;
   vector<future<void> > futs(maxThreads);
@@ -70,7 +70,7 @@ void kmersCount(ifstream &infile, vector<unordered_map<size_t, int> > &kmers,
   cerr << " with " << maxThreads << " threads" << endl << "Counting k-mers..." << endl;
   for (size_t i = 0; i < maxThreads; ++i) {
     chunks.push_back(vector<string>(maxLine));
-    kmers.push_back(unordered_map<size_t, int>());
+    kmers.push_back(unordered_map<size_t, size_t>());
     inUse.push_back(false);
   }
   while (getline(infile, chunks[curThread][curLine])) {

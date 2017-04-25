@@ -29,25 +29,27 @@ static int usage() {
        << "              -s KMERSEED Seed for spaced kmers (either -k or -s)" << endl
        << "-> optional : -o OUTFILE  Output File, default stdout" << endl
        << "              -j THREADS  Number of threads, default 1" << endl
+       << "              -L MINOCC   Minimum number of occurences, default 1" << endl
        << "              -h          Help: This usage message" << endl;
   return EXIT_FAILURE;
 }
 
 int main(int ac, char **av) {
-  vector<unordered_map<size_t, int> > kmers;
+  vector<unordered_map<size_t, size_t> > kmers;
   bool flagInfile = false, flagOutfile = false, flagOpt = false;
-  size_t maxThreads = 1, maxLine, kLen;
+  size_t maxThreads = 1, maxLine, kLen, minOcc = 1;
   ifstream infile;
   ofstream outfile;
   char opt;
 
-  while ((opt = getopt(ac, av, "j:k:s:i:o:h")) != -1) {
+  while ((opt = getopt(ac, av, "j:k:s:i:o:L:h")) != -1) {
     switch (opt) {
     case 'j': setMaxThreads(optarg, maxThreads); break;
     case 'k': setKmerLength(optarg, kLen, flagOpt); break;
     case 's': setSeed(optarg, kLen, flagOpt); break;
     case 'i': setInfile(optarg, infile, flagInfile); break;
     case 'o': setOutfile(optarg, outfile, flagOutfile); break;
+    case 'L': setMinOcc(optarg, minOcc); break;
     case 'h':
     default : return usage();
     }
@@ -57,9 +59,9 @@ int main(int ac, char **av) {
   setMaxLine(infile, maxLine, maxThreads);
   kmersCount(infile, kmers, maxThreads, maxLine);
   mergeMaps(kmers, maxThreads);
-  printMap(kmers[0], kLen, flagOutfile ? outfile : cout);
+  printMap(kmers[0], kLen, minOcc, flagOutfile ? outfile : cout);
   infile.close();
   if (flagOutfile)
     outfile.close();
-  return 0;
-  }
+  return EXIT_SUCCESS;
+}

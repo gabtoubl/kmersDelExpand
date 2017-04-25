@@ -52,3 +52,7 @@ void setOutfile(string optarg, ofstream &outfile, bool &flagOutfile) {
     exit(EXIT_FAILURE);
   }
 }
+
+void setMinOcc(string optarg, size_t &minOcc) {
+  minOcc = stoi(optarg);
+}
