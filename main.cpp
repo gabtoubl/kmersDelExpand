@@ -1,10 +1,9 @@
-#include <unordered_map>
 #include <vector>
 #include <string>
 #include <fstream>
-#include <algorithm>
-#include <iostream>
 #include <unistd.h>
+#include <iostream>
+#include <algorithm>
 
 #include "kmersCount.hpp"
 
@@ -27,7 +26,7 @@ static int usage() {
        << "-> mandatory: -i INFILE   Input File in FASTA format" << endl
        << "              -k KMERLEN  Length of k-mers (either -k or -s)" << endl
        << "              -s KMERSEED Seed for spaced kmers (either -k or -s)" << endl
-       << "-> optional : -o OUTFILE  Output File, default stdout" << endl
+       << "-> optional:  -o OUTFILE  Output File, default stdout" << endl
        << "              -j THREADS  Number of threads, default 1" << endl
        << "              -L MINOCC   Minimum number of occurences, default 1" << endl
        << "              -h          Help: This usage message" << endl;
@@ -35,7 +34,7 @@ static int usage() {
 }
 
 int main(int ac, char **av) {
-  vector<unordered_map<size_t, size_t> > kmers;
+  hash_map kmers;
   bool flagInfile = false, flagOutfile = false, flagOpt = false;
   size_t maxThreads = 1, maxLine, kLen, minOcc = 1;
   ifstream infile;
@@ -58,8 +57,7 @@ int main(int ac, char **av) {
     return usage();
   setMaxLine(infile, maxLine, maxThreads);
   kmersCount(infile, kmers, maxThreads, maxLine);
-  mergeMaps(kmers, maxThreads);
-  printMap(kmers[0], kLen, minOcc, flagOutfile ? outfile : cout);
+  printMap(kmers, kLen, minOcc, flagOutfile ? outfile : cout);
   infile.close();
   if (flagOutfile)
     outfile.close();

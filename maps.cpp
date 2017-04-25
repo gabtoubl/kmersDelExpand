@@ -1,20 +1,22 @@
-#include <unordered_map>
-#include <algorithm>
-#include <iostream>
-#include <fstream>
 #include <string>
 #include <vector>
+#include <fstream>
+#include <iostream>
+#include <algorithm>
+
+#include "kmersCount.hpp"
 
 using namespace std;
 
-void printMap(unordered_map<size_t, size_t> &kmers, size_t &kLen,
+void printMap(hash_map &kmers, size_t &kLen,
 	      size_t &minOcc, ostream &out) {
+  auto kmersTable = kmers.lock_table();
   string kmerStr;
   size_t kmerInt;
   char c[4] = {'A', 'C', 'G', 'T'};
 
-  cerr << "Printing merged map..." << endl;
-  for (const auto& kmer: kmers) {
+  cerr << "Printing kmers..." << endl;
+  for (const auto& kmer: kmersTable) {
     if (kmer.second < minOcc)
       continue;
     kmerStr = "";
@@ -27,11 +29,4 @@ void printMap(unordered_map<size_t, size_t> &kmers, size_t &kLen,
     out << ">" << kmer.second << endl
 	<< kmerStr << endl;
   }
-}
-
-void mergeMaps(vector<unordered_map<size_t, size_t> > &kmers, size_t &maxThreads) {
-  cerr << "Merging maps together..." << endl;
-  for (size_t i = 1; i < maxThreads; ++i)
-    for (auto&& k: kmers[i])
-      kmers[0][k.first] += k.second;
 }

@@ -6,7 +6,7 @@ SRCS=		main.cpp       \
 INCLUDES=	kmersCount.hpp
 OBJS=		$(SRCS:.cpp=.o)
 CC=		g++
-CXXFLAGS=	-W -Wall -Wextra -ansi -pedantic -std=c++11 -O3
+CXXFLAGS=	-W -Wall -Wextra -ansi -pedantic -std=c++11 -O3 -I.
 LDFLAGS=	-lpthread
 RM=		rm -vf
 

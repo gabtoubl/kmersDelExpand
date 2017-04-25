@@ -1,16 +1,17 @@
-#include <unordered_map>
-#include <iostream>
-#include <fstream>
 #include <vector>
 #include <string>
 #include <future>
+#include <fstream>
+#include <iostream>
+
+#include "kmersCount.hpp"
 
 using namespace std;
 
 extern size_t k;
 extern string seed;
 
-static void computeKmers(unordered_map<size_t, size_t> &kmers, vector<string> lines,
+static void computeKmers(hash_map &kmers, vector<string> lines,
 			 size_t limitLine) {
   size_t badNuc, kmerInt;
   string kmer, line;
@@ -39,13 +40,13 @@ static void computeKmers(unordered_map<size_t, size_t> &kmers, vector<string> li
 	  case 'T': kmerInt += 3; break;
 	  }
 	}
-	kmers[kmerInt] += 1;
+	kmers.upsert(kmerInt, [](size_t &n) {++n;}, 1);
       }
     }
   }
 }
 
-static void startNewThread(unordered_map<size_t, size_t> &kmers, vector<string> &chunk, future<void> &fut,
+static void startNewThread(hash_map &kmers, vector<string> &chunk, future<void> &fut,
 			   vector<bool> &inUse, size_t &curThread, size_t &curLine) {
   if (inUse[curThread]) {
     fut.get();
@@ -56,7 +57,7 @@ static void startNewThread(unordered_map<size_t, size_t> &kmers, vector<string> 
   inUse[curThread] = true;
 }
 
-void kmersCount(ifstream &infile, vector<unordered_map<size_t, size_t> > &kmers,
+void kmersCount(ifstream &infile, hash_map &kmers,
 		size_t &maxThreads, size_t &maxLine) {
   vector<vector<string> > chunks;
   vector<future<void> > futs(maxThreads);
@@ -70,20 +71,19 @@ void kmersCount(ifstream &infile, vector<unordered_map<size_t, size_t> > &kmers,
   cerr << " with " << maxThreads << " threads" << endl << "Counting k-mers..." << endl;
   for (size_t i = 0; i < maxThreads; ++i) {
     chunks.push_back(vector<string>(maxLine));
-    kmers.push_back(unordered_map<size_t, size_t>());
     inUse.push_back(false);
   }
   while (getline(infile, chunks[curThread][curLine])) {
     getline(infile, chunks[curThread][curLine]);
     ++curLine;
     if (curLine == maxLine) {
-      startNewThread(kmers[curThread], chunks[curThread], futs[curThread], inUse, curThread, curLine);
+      startNewThread(kmers, chunks[curThread], futs[curThread], inUse, curThread, curLine);
       curLine = 0;
       curThread = (curThread + 1) % maxThreads;
     }
   }
   if (curLine && curLine != maxLine)
-    startNewThread(kmers[curThread], chunks[curThread], futs[curThread], inUse, curThread, curLine);
+    startNewThread(kmers, chunks[curThread], futs[curThread], inUse, curThread, curLine);
   for (size_t i = 0; i < maxThreads; ++i)
     if (inUse[i]) {
       futs[i].get();
