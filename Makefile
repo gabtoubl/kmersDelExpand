@@ -2,7 +2,7 @@ NAME=		kmersCount
 SRCS=		main.cpp       \
 		count.cpp      \
 		options.cpp    \
-		maps.cpp
+		print.cpp
 INCLUDES=	kmersCount.hpp
 OBJS=		$(SRCS:.cpp=.o)
 CC=		g++

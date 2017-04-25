@@ -16,7 +16,7 @@ void setInfile(string, ifstream &, bool&);
 void setOutfile(string, ofstream &, bool&);
 void setMinOcc(string, size_t &);
 
-//maps.cpp
+//print.cpp
 void printMap(hash_map&, size_t&, size_t &, ostream&);
 
 #endif   /* KMERCOUNT_HPP_*/

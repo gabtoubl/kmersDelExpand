@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>
+#include <sstream>
 
 #include "kmersCount.hpp"
 
@@ -11,11 +12,12 @@ using namespace std;
 void printMap(hash_map &kmers, size_t &kLen,
 	      size_t &minOcc, ostream &out) {
   auto kmersTable = kmers.lock_table();
+  ostringstream ss;
   string kmerStr;
   size_t kmerInt;
   char c[4] = {'A', 'C', 'G', 'T'};
 
-  cerr << "Printing kmers..." << endl;
+  cerr << "Printing k-mers..." << endl;
   for (const auto& kmer: kmersTable) {
     if (kmer.second < minOcc)
       continue;
@@ -26,7 +28,7 @@ void printMap(hash_map &kmers, size_t &kLen,
       kmerInt /= 4;
     }
     reverse(kmerStr.begin(), kmerStr.end());
-    out << ">" << kmer.second << endl
-	<< kmerStr << endl;
+    ss << ">" << kmer.second << "\n" << kmerStr << "\n";
   }
+  out << ss.str();
 }
