@@ -34,7 +34,6 @@ static int usage() {
 }
 
 int main(int ac, char **av) {
-  hash_map kmers;
   bool flagInfile = false, flagOutfile = false, flagOpt = false;
   size_t maxThreads = 1, maxLine, kLen, minOcc = 1;
   ifstream infile;
@@ -56,8 +55,16 @@ int main(int ac, char **av) {
   if (!flagInfile || !flagOpt)
     return usage();
   setMaxLine(infile, maxLine, maxThreads);
-  kmersCount(infile, kmers, maxThreads, maxLine);
-  printMap(kmers, kLen, minOcc, flagOutfile ? outfile : cout);
+  if (kLen < 32) {
+    hash_map<size_t> kmers;
+    kmersCount(infile, kmers, maxThreads, maxLine);
+    printMap(kmers, kLen, minOcc, flagOutfile ? outfile : cout);
+  }
+  else {
+    hash_map<string> kmers;
+    kmersCount(infile, kmers, maxThreads, maxLine);
+    printMap(kmers, kLen, minOcc, flagOutfile ? outfile : cout);
+  }
   infile.close();
   if (flagOutfile)
     outfile.close();

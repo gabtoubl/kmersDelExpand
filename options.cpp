@@ -17,10 +17,6 @@ void setMaxThreads(string optarg, size_t &maxThreads) {
 void setKmerLength(string optarg, size_t &kLen, bool &flagOpt) {
   flagOpt ^= true;
   k = stoi(optarg);
-  if (k > 32) {
-    cerr << "Warning: current program can't count above 32-mers" << endl;
-    k = 32;
-  }
   kLen = k;
 }
 
@@ -28,11 +24,6 @@ void setSeed(string optarg, size_t &kLen, bool &flagOpt) {
   flagOpt ^= true;
   seed = optarg;
   kLen = seed.length() - count(seed.begin(), seed.end(), '0');
-  if (kLen > 32) {
-    cerr << "Warning: current program can't count above 32-mers" << endl;
-    cerr << "Error: with seed, this program can't continue" << endl;
-    exit(EXIT_FAILURE);
-  }
 }
 
 void setInfile(string optarg, ifstream &infile, bool &flagInfile) {

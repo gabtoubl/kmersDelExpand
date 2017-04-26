@@ -1,12 +1,15 @@
-#ifndef  KMERCOUNT_HPP_
+#ifndef KMERCOUNT_HPP_
 # define KMERCOUNT_HPP_
 # include <libcuckoo/cuckoohash_map.hh>
 
 using namespace std;
-typedef cuckoohash_map<size_t, size_t> hash_map;
+template <typename T>
+using hash_map = cuckoohash_map<T, size_t>;
 
 // count.cpp
-void kmersCount(ifstream&, hash_map&, size_t&, size_t&);
+template <typename T>
+void kmersCount(ifstream&, hash_map<T>&, size_t&, size_t&);
+#include "count.cpp"
 
 // options.cpp
 void setMaxThreads(string, size_t&);
@@ -16,7 +19,9 @@ void setInfile(string, ifstream &, bool&);
 void setOutfile(string, ofstream &, bool&);
 void setMinOcc(string, size_t &);
 
-//print.cpp
-void printMap(hash_map&, size_t&, size_t &, ostream&);
+// print.cpp
+template <typename T>
+void printMap(hash_map<T>&, size_t&, size_t &, ostream&);
+#include "print.cpp"
 
-#endif   /* KMERCOUNT_HPP_*/
+#endif /* KMERCOUNT_HPP_*/
