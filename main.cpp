@@ -55,7 +55,7 @@ int main(int ac, char **av) {
   if (!flagInfile || !flagOpt)
     return usage();
   setMaxLine(infile, maxLine, maxThreads);
-  if (kLen < 32) {
+  if (kLen <= 16) {
     hash_map<size_t> kmers;
     kmersCount(infile, kmers, maxThreads, maxLine);
     printMap(kmers, kLen, minOcc, flagOutfile ? outfile : cout);
