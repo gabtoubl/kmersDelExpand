@@ -32,6 +32,7 @@ void computeKmers(hash_map<size_t> &kmers, vector<string> lines, size_t limitLin
 	for (auto&& c: kmer) {
 	  kmerInt *= 4;
 	  switch (c) {
+	  case 'A': break;
 	  case 'C': kmerInt += 1; break;
 	  case 'G': kmerInt += 2; break;
 	  case 'T': kmerInt += 3; break;

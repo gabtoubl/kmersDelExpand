@@ -10,21 +10,15 @@ using namespace std;
 void printMap(hash_map<size_t> &kmers, size_t &kLen,
 	      size_t &minOcc, ostream &out) {
   ostringstream ss;
-  string kmerStr;
-  size_t kmerInt;
+  string kmerStr(16, 'X');
   char c[4] = {'A', 'C', 'G', 'T'};
 
-  cerr << "Printing k-mers..." << endl;
+  cerr << "Printing " << kLen << "-mers..." << endl;
   for (const auto& kmer: kmers.lock_table()) {
     if (kmer.second < minOcc)
       continue;
-    kmerStr = "";
-    kmerInt = kmer.first;
-    for (size_t i = 0; i < kLen; ++i) {
-      kmerStr += c[kmerInt % 4];
-      kmerInt /= 4;
-    }
-    reverse(kmerStr.begin(), kmerStr.end());
+    for (size_t i = 0, kmerInt = kmer.first; i < kLen; ++i, kmerInt >>= 2)
+      kmerStr[kLen-i-1] = c[kmerInt & 3];
     ss << ">" << kmer.second << endl << kmerStr << endl;
   }
   out << ss.str();
@@ -34,8 +28,7 @@ void printMap(hash_map<string> &kmers, size_t &kLen,
 	      size_t &minOcc, ostream &out) {
   ostringstream ss;
 
-  cerr << "Printing k-mers..." << endl;
-  (void)kLen;
+  cerr << "Printing " << kLen << "-mers..." << endl;
   for (const auto& kmer: kmers.lock_table()) {
     if (kmer.second < minOcc)
       continue;
