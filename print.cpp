@@ -10,7 +10,7 @@ using namespace std;
 void printMap(hash_map<size_t> &kmers, size_t &kLen,
 	      size_t &minOcc, ostream &out) {
   ostringstream ss;
-  string kmerStr(16, 'X');
+  string kmerStr(kLen, 'X');
   char c[4] = {'A', 'C', 'G', 'T'};
 
   cerr << "Printing " << kLen << "-mers..." << endl;
