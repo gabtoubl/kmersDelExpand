@@ -8,7 +8,7 @@ using hash_map = cuckoohash_map<T, size_t>;
 
 // count.cpp
 template <typename T>
-void kmersCount(ifstream&, hash_map<T>&, size_t&, size_t&);
+void kmersCount(istream&, hash_map<T>&, size_t&, size_t&);
 #include "count.cpp"
 
 // options.cpp

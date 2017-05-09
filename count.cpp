@@ -83,7 +83,7 @@ static void startNewThread(hash_map<T> &kmers, vector<string> &chunk, future<voi
 }
 
 template <typename T>
-void kmersCount(ifstream &infile, hash_map<T> &kmers,
+void kmersCount(istream &infile, hash_map<T> &kmers,
 		size_t &maxThreads, size_t &maxLine) {
   vector<vector<string> > chunks;
   vector<future<void> > futs(maxThreads);

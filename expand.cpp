@@ -25,26 +25,26 @@ static void setMaxLine(ifstream &infile, size_t &maxLine, size_t &maxThreads) {
 
 static int usage() {
   cerr << "usage: ./kmersExpand OPTIONS" << endl
-       << "-> mandatory: -i INFILE   Input File in FASTA format" << endl
-       << "              -s KMERSEED Seed for expanded kmers" << endl
-       << "-> optional:  -o OUTFILE  Output File, default stdout" << endl
+       << "-> mandatory: -s KMERSEED Seed for expanded kmers" << endl
+       << "-> optional:  -i INFILE   Input File in FASTA format, default cin" << endl
+       << "              -o OUTFILE  Output File, default stdout" << endl
        << "              -j THREADS  Number of threads, default 1" << endl
        << "              -h          Help: This usage message" << endl;
   return EXIT_FAILURE;
 }
 
-static void getExpandedKmers(string res, ostringstream &ss, string line, size_t posSeed, size_t posLine) {
+static void getExpandedKmers(string res, ostringstream &ss, string kmer, size_t posSeed, size_t posKmer) {
   if (posSeed == seed.length()) {
     ss << ">expanded" << endl << res << endl;
     return;
   }
   if (seed[posSeed] == '1')
-    getExpandedKmers(res + line[posLine], ss, line, posSeed + 1, posLine + 1);    
+    getExpandedKmers(res + kmer[posKmer], ss, kmer, posSeed + 1, posKmer + 1);    
   else {
-    getExpandedKmers(res + "A", ss, line, posSeed + 1, posLine);
-    getExpandedKmers(res + "C", ss, line, posSeed + 1, posLine);
-    getExpandedKmers(res + "G", ss, line, posSeed + 1, posLine);
-    getExpandedKmers(res + "T", ss, line, posSeed + 1, posLine);
+    getExpandedKmers(res + "A", ss, kmer, posSeed + 1, posKmer);
+    getExpandedKmers(res + "C", ss, kmer, posSeed + 1, posKmer);
+    getExpandedKmers(res + "G", ss, kmer, posSeed + 1, posKmer);
+    getExpandedKmers(res + "T", ss, kmer, posSeed + 1, posKmer);
   }
 }
 
@@ -57,7 +57,11 @@ static void expandKmers(ostringstream &ss, vector<string> lines, size_t limitLin
     line = lines[l];
     isBadNuc = (line.find_first_not_of("ACGT") != string::npos);
     for (size_t i = 0; i + kLen <= line.length(); ++i) {
-      getExpandedKmers("", ss, line.substr(i, kLen), 0, 0);
+      kmer = line.substr(i, kLen);
+      if (isBadNuc && (badNuc = kmer.find_first_not_of("ACGT")) != string::npos)
+	i += badNuc;
+      else
+	getExpandedKmers("", ss, kmer, 0, 0);
     }
   }
 }
@@ -77,7 +81,7 @@ static void startNewThread(ostringstream &ss, vector<string> &chunk, future<void
   inUse[curThread] = true;
 }
 
-static void kmersExpand(ifstream &infile, size_t &maxThreads, size_t &maxLine,
+static void kmersExpand(istream &infile, size_t &maxThreads, size_t &maxLine,
 			size_t &kLen, ostream &out) {
   vector<future<void> > futs(maxThreads);
   vector<ostringstream> ss(maxThreads);
@@ -114,7 +118,7 @@ static void kmersExpand(ifstream &infile, size_t &maxThreads, size_t &maxLine,
 
 int main(int ac, char **av) {
   bool flagInfile = false, flagOutfile = false, flagSeed = false;
-  size_t maxThreads = 1, maxLine, kLen;
+  size_t maxThreads = 1, maxLine = 100000, kLen;
   ifstream infile;
   ofstream outfile;
   char opt;
@@ -129,11 +133,16 @@ int main(int ac, char **av) {
     default : return usage();
     }
   }
-  if (!flagInfile || !flagSeed)
+  if (!flagSeed)
     return usage();
-  setMaxLine(infile, maxLine, maxThreads);
-  kmersExpand(infile, maxThreads, maxLine, kLen, flagOutfile ? outfile : cout);
-  infile.close();
+  if (!flagInfile)
+    cerr << "Using Standard Input as FASTA file" << endl;
+  else
+    setMaxLine(infile, maxLine, maxThreads);
+  kmersExpand(flagInfile ? infile : cin, maxThreads, maxLine, kLen,
+	      flagOutfile ? outfile : cout);
+  if (flagInfile)
+    infile.close();
   if (flagOutfile)
     outfile.close();
   return EXIT_SUCCESS;

@@ -23,10 +23,10 @@ static void setMaxLine(ifstream &infile, size_t &maxLine, size_t &maxThreads) {
 
 static int usage() {
   cerr << "usage: ./kmersCount OPTIONS" << endl
-       << "-> mandatory: -i INFILE   Input File in FASTA format" << endl
-       << "              -k KMERLEN  Length of k-mers (either -k or -s)" << endl
+       << "-> mandatory: -k KMERLEN  Length of k-mers (either -k or -s)" << endl
        << "              -s KMERSEED Seed for spaced kmers (either -k or -s)" << endl
-       << "-> optional:  -o OUTFILE  Output File, default stdout" << endl
+       << "-> optional:  -i INFILE   Input File in FASTA format, default stdin" << endl
+       << "              -o OUTFILE  Output File, default stdout" << endl
        << "              -j THREADS  Number of threads, default 1" << endl
        << "              -L MINOCC   Minimum number of occurences, default 1" << endl
        << "              -h          Help: This usage message" << endl;
@@ -35,7 +35,7 @@ static int usage() {
 
 int main(int ac, char **av) {
   bool flagInfile = false, flagOutfile = false, flagOpt = false;
-  size_t maxThreads = 1, maxLine, kLen, minOcc = 1;
+  size_t maxThreads = 1, maxLine = 100000, kLen, minOcc = 1;
   ifstream infile;
   ofstream outfile;
   char opt;
@@ -52,20 +52,24 @@ int main(int ac, char **av) {
     default : return usage();
     }
   }
-  if (!flagInfile || !flagOpt)
+  if (!flagOpt)
     return usage();
-  setMaxLine(infile, maxLine, maxThreads);
+  if (!flagInfile)
+    cerr << "Using Standard Input as FASTA file" << endl;
+  else
+    setMaxLine(infile, maxLine, maxThreads);
   if (kLen <= 16) {
     hash_map<size_t> kmers;
-    kmersCount(infile, kmers, maxThreads, maxLine);
+    kmersCount(flagInfile ? infile : cin, kmers, maxThreads, maxLine);
     printMap(kmers, kLen, minOcc, flagOutfile ? outfile : cout);
   }
   else {
     hash_map<string> kmers;
-    kmersCount(infile, kmers, maxThreads, maxLine);
+    kmersCount(flagInfile ? infile : cin, kmers, maxThreads, maxLine);
     printMap(kmers, kLen, minOcc, flagOutfile ? outfile : cout);
   }
-  infile.close();
+  if (flagInfile)
+    infile.close();
   if (flagOutfile)
     outfile.close();
   return EXIT_SUCCESS;
