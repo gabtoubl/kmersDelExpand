@@ -35,7 +35,7 @@ static int usage() {
 
 static void getExpandedKmers(string res, ostringstream &ss, string kmer, size_t posSeed, size_t posKmer) {
   if (posSeed == seed.length()) {
-    ss << ">expanded" << endl << res << endl;
+    ss << ">F" << endl << res << endl;
     return;
   }
   if (seed[posSeed] == '1')
