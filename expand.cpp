@@ -20,7 +20,7 @@ static void setMaxLine(ifstream &infile, size_t &maxLine, size_t &maxThreads) {
   infile.clear();
   infile.seekg(0);
   maxLine = (maxLine - maxLine % maxThreads) / maxThreads;
-  maxLine = maxLine > 200000 ? 200000 : maxLine < 1 ? 1 : maxLine;
+  maxLine = maxLine < 1 ? 1 : maxLine;
 }
 
 static int usage() {
@@ -33,22 +33,23 @@ static int usage() {
   return EXIT_FAILURE;
 }
 
-static void getExpandedKmers(string res, ostringstream &ss, string kmer, size_t posSeed, size_t posKmer) {
+
+static void getExpandedKmers(string res, ostream &out, string kmer, size_t posSeed, size_t posKmer) {
   if (posSeed == seed.length()) {
-    ss << ">F" << endl << res << endl;
+    out << ">F" << endl << res << endl;
     return;
   }
   if (seed[posSeed] == '1')
-    getExpandedKmers(res + kmer[posKmer], ss, kmer, posSeed + 1, posKmer + 1);    
+    getExpandedKmers(res + kmer[posKmer], out, kmer, posSeed + 1, posKmer + 1);
   else {
-    getExpandedKmers(res + "A", ss, kmer, posSeed + 1, posKmer);
-    getExpandedKmers(res + "C", ss, kmer, posSeed + 1, posKmer);
-    getExpandedKmers(res + "G", ss, kmer, posSeed + 1, posKmer);
-    getExpandedKmers(res + "T", ss, kmer, posSeed + 1, posKmer);
+    getExpandedKmers(res + "A", out, kmer, posSeed + 1, posKmer);
+    getExpandedKmers(res + "C", out, kmer, posSeed + 1, posKmer);
+    getExpandedKmers(res + "G", out, kmer, posSeed + 1, posKmer);
+    getExpandedKmers(res + "T", out, kmer, posSeed + 1, posKmer);
   }
 }
 
-static void expandKmers(ostringstream &ss, vector<string> lines, size_t limitLine, size_t kLen) {
+static void expandKmers(ostream &out, vector<string> lines, size_t limitLine, size_t kLen) {
   size_t badNuc;
   string kmer, line;
   bool isBadNuc;
@@ -61,7 +62,7 @@ static void expandKmers(ostringstream &ss, vector<string> lines, size_t limitLin
       if (isBadNuc && (badNuc = kmer.find_first_not_of("ACGT")) != string::npos)
 	i += badNuc;
       else
-	getExpandedKmers("", ss, kmer, 0, 0);
+	getExpandedKmers("", out, kmer, 0, 0);
     }
   }
 }
@@ -72,11 +73,11 @@ static void startNewThread(ostringstream &ss, vector<string> &chunk, future<void
   if (inUse[curThread]) {
     fut.get();
     cerr << "Thread " << curThread << " complete"<< endl;
-    out << ss.str();
+    //    out << ss.str(); // current bug with stringstreams
   }
   cerr << "Starting thread " << curThread << endl;
-  fut = async(launch::async, [&ss, chunk, curLine, kLen]() mutable {
-      expandKmers(ss, chunk, curLine, kLen);
+  fut = async(launch::async, [&out, chunk, curLine, kLen]() mutable {
+      expandKmers(out, chunk, curLine, kLen);
     });
   inUse[curThread] = true;
 }
@@ -112,8 +113,9 @@ static void kmersExpand(istream &infile, size_t &maxThreads, size_t &maxLine,
     if (inUse[i]) {
       futs[i].get();
       cerr << "Thread " << i << " complete"<< endl;
-      out << ss[i].str();
+      //out << ss[i].str(); // current bug with stringstreams
     }
+  cerr << "End of program" << endl;
 }
 
 int main(int ac, char **av) {
