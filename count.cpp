@@ -3,7 +3,7 @@
 #include <future>
 #include <fstream>
 #include <iostream>
-#include <sstream>
+#include <mutex>
 
 #include "kmersCount.hpp"
 
@@ -12,7 +12,9 @@ using namespace std;
 extern size_t k;
 extern string seed;
 
-void delKmers(ostringstream &ss, vector<string> lines, size_t limitLine) {
+mutex mtx;
+
+void delKmers(ostream &out, vector<string> lines, size_t limitLine) {
   size_t badNuc;
   string kmer, line;
   bool isBadNuc;
@@ -30,32 +32,31 @@ void delKmers(ostringstream &ss, vector<string> lines, size_t limitLine) {
 	if (seed == "")
 	  i += badNuc;
       }
-      else
-	ss << ">k" << endl << kmer << endl;
+      else {
+	mtx.lock();
+	out << ">k" << endl << kmer << endl;
+	mtx.unlock();
+      }
     }
   }
 }
 
-static void startNewThread(ostringstream &ss, vector<string> &chunk, future<void> &fut,
+static void startNewThread(vector<string> &chunk, future<void> &fut,
 			   vector<bool> &inUse, size_t &curThread, size_t &curLine,
 			   ostream &out) {
   if (inUse[curThread]) {
     fut.get();
     cerr << "Thread " << curThread << " complete"<< endl;
-    out << ss.str();
-    ss.str("");
-    ss.clear();
   }
   cerr << "Starting thread " << curThread << endl;
-  fut = async(launch::async, [&ss, chunk, curLine]() mutable {
-      delKmers(ss, chunk, curLine);
+  fut = async(launch::async, [&out, chunk, curLine]() mutable {
+      delKmers(out, chunk, curLine);
     });
   inUse[curThread] = true;
 }
 
 void kmersDel(istream &infile, size_t &maxThreads, size_t &maxLine, ostream &out) {
   vector<future<void> > futs(maxThreads);
-  vector<ostringstream> ss(maxThreads);
   vector<vector<string> > chunks;
   vector<bool> inUse;
   size_t curThread = 0, curLine = 0;
@@ -73,21 +74,16 @@ void kmersDel(istream &infile, size_t &maxThreads, size_t &maxLine, ostream &out
     getline(infile, chunks[curThread][curLine]);
     ++curLine;
     if (curLine == maxLine) {
-      startNewThread(ss[curThread], chunks[curThread], futs[curThread],
-		     inUse, curThread, curLine, out);
+      startNewThread(chunks[curThread], futs[curThread], inUse, curThread, curLine, out);
       curLine = 0;
       curThread = (curThread + 1) % maxThreads;
     }
   }
   if (curLine && curLine != maxLine)
-    startNewThread(ss[curThread], chunks[curThread], futs[curThread],
-		   inUse, curThread, curLine, out);
+    startNewThread(chunks[curThread], futs[curThread], inUse, curThread, curLine, out);
   for (size_t i = 0; i < maxThreads; ++i)
     if (inUse[i]) {
       futs[i].get();
       cerr << "Thread " << i << " complete"<< endl;
-      out << ss[i].str();
-      ss[i].str("");
-      ss[i].clear();
     }
 }
