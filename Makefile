@@ -1,6 +1,7 @@
-NAME=		kmersCount
+NAME=		kmersDel
 NAME2=		kmersExpand
 SRCS=		main.cpp       \
+		count.cpp      \
 		options.cpp
 SRCS2=		expand.cpp     \
 		options.cpp

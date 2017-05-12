@@ -22,7 +22,7 @@ static void setMaxLine(ifstream &infile, size_t &maxLine, size_t &maxThreads) {
 }
 
 static int usage() {
-  cerr << "usage: ./kmersCount OPTIONS" << endl
+  cerr << "usage: ./kmersDel OPTIONS" << endl
        << "-> mandatory: -k KMERLEN  Length of k-mers (either -k or -s)" << endl
        << "              -s KMERSEED Seed for spaced kmers (either -k or -s)" << endl
        << "-> optional:  -i INFILE   Input File in FASTA format, default stdin" << endl
@@ -35,7 +35,7 @@ static int usage() {
 
 int main(int ac, char **av) {
   bool flagInfile = false, flagOutfile = false, flagOpt = false;
-  size_t maxThreads = 1, maxLine = 100000, kLen, minOcc = 1;
+  size_t maxThreads = 1, maxLine = 100000, kLen;
   ifstream infile;
   ofstream outfile;
   char opt;
@@ -47,7 +47,6 @@ int main(int ac, char **av) {
     case 's': setSeed(optarg, kLen, flagOpt); break;
     case 'i': setInfile(optarg, infile, flagInfile); break;
     case 'o': setOutfile(optarg, outfile, flagOutfile); break;
-    case 'L': setMinOcc(optarg, minOcc); break;
     case 'h':
     default : return usage();
     }
@@ -58,16 +57,7 @@ int main(int ac, char **av) {
     cerr << "Using Standard Input as FASTA file" << endl;
   else
     setMaxLine(infile, maxLine, maxThreads);
-  if (kLen <= 16) {
-    hash_map<size_t> kmers;
-    kmersCount(flagInfile ? infile : cin, kmers, maxThreads, maxLine);
-    printMap(kmers, kLen, minOcc, flagOutfile ? outfile : cout);
-  }
-  else {
-    hash_map<string> kmers;
-    kmersCount(flagInfile ? infile : cin, kmers, maxThreads, maxLine);
-    printMap(kmers, kLen, minOcc, flagOutfile ? outfile : cout);
-  }
+  kmersDel(flagInfile ? infile : cin, maxThreads, maxLine, flagOutfile ? outfile : cout);
   if (flagInfile)
     infile.close();
   if (flagOutfile)

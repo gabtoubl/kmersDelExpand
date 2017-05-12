@@ -1,5 +1,5 @@
 *.o
 *.fa
 *~
-kmersCount
+kmersDel
 kmersExpand

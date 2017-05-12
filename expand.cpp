@@ -73,8 +73,8 @@ static void startNewThread(ostringstream &ss, vector<string> &chunk, future<void
   if (inUse[curThread]) {
     fut.get();
     cerr << "Thread " << curThread << " complete"<< endl;
-    out << ss.str(); // current bug with stringstreams
-    ss.str(string());
+    out << ss.str();
+    ss.str("");
     ss.clear();
   }
   cerr << "Starting thread " << curThread << endl;
@@ -115,8 +115,8 @@ static void kmersExpand(istream &infile, size_t &maxThreads, size_t &maxLine,
     if (inUse[i]) {
       futs[i].get();
       cerr << "Thread " << i << " complete"<< endl;
-      out << ss[i].str(); // current bug with stringstreams
-      ss[i].str(string());
+      out << ss[i].str();
+      ss[i].str("");
       ss[i].clear();
     }
   cerr << "End of program" << endl;
