@@ -1,11 +1,11 @@
 #include <vector>
 #include <string>
-#include <sstream>
 #include <fstream>
 #include <unistd.h>
 #include <iostream>
 #include <algorithm>
 #include <future>
+#include <mutex>
 
 #include "kmersCount.hpp"
 
@@ -33,23 +33,26 @@ static int usage() {
   return EXIT_FAILURE;
 }
 
+mutex mtx;
 
-static void getExpandedKmers(string res, ostringstream &ss, string kmer, size_t posSeed, size_t posKmer) {
+static void getExpandedKmers(string res, ostream &out, string kmer, size_t posSeed, size_t posKmer) {
   if (posSeed == seed.length()) {
-    ss << ">F" << endl << res << endl;
+    mtx.lock();
+    out << ">F" << endl << res << endl;
+    mtx.unlock();
     return;
   }
   if (seed[posSeed] == '1')
-    getExpandedKmers(res + kmer[posKmer], ss, kmer, posSeed + 1, posKmer + 1);
+    getExpandedKmers(res + kmer[posKmer], out, kmer, posSeed + 1, posKmer + 1);
   else {
-    getExpandedKmers(res + "A", ss, kmer, posSeed + 1, posKmer);
-    getExpandedKmers(res + "C", ss, kmer, posSeed + 1, posKmer);
-    getExpandedKmers(res + "G", ss, kmer, posSeed + 1, posKmer);
-    getExpandedKmers(res + "T", ss, kmer, posSeed + 1, posKmer);
+    getExpandedKmers(res + "A", out, kmer, posSeed + 1, posKmer);
+    getExpandedKmers(res + "C", out, kmer, posSeed + 1, posKmer);
+    getExpandedKmers(res + "G", out, kmer, posSeed + 1, posKmer);
+    getExpandedKmers(res + "T", out, kmer, posSeed + 1, posKmer);
   }
 }
 
-static void expandKmers(ostringstream &ss, vector<string> lines, size_t limitLine, size_t kLen) {
+static void expandKmers(ostream &out, vector<string> lines, size_t limitLine, size_t kLen) {
   size_t badNuc;
   string kmer, line;
   bool isBadNuc;
@@ -62,24 +65,21 @@ static void expandKmers(ostringstream &ss, vector<string> lines, size_t limitLin
       if (isBadNuc && (badNuc = kmer.find_first_not_of("ACGT")) != string::npos)
 	i += badNuc;
       else
-	getExpandedKmers("", ss, kmer, 0, 0);
+	getExpandedKmers("", out, kmer, 0, 0);
     }
   }
 }
 
-static void startNewThread(ostringstream &ss, vector<string> &chunk, future<void> &fut,
+static void startNewThread(vector<string> &chunk, future<void> &fut,
 			   vector<bool> &inUse, size_t &curThread, size_t &curLine,
 			   size_t &kLen, ostream &out) {
   if (inUse[curThread]) {
     fut.get();
     cerr << "Thread " << curThread << " complete"<< endl;
-    out << ss.str();
-    ss.str("");
-    ss.clear();
   }
   cerr << "Starting thread " << curThread << endl;
-  fut = async(launch::async, [&ss, chunk, curLine, kLen]() mutable {
-      expandKmers(ss, chunk, curLine, kLen);
+  fut = async(launch::async, [&out, chunk, curLine, kLen]() mutable {
+      expandKmers(out, chunk, curLine, kLen);
     });
   inUse[curThread] = true;
 }
@@ -87,7 +87,6 @@ static void startNewThread(ostringstream &ss, vector<string> &chunk, future<void
 static void kmersExpand(istream &infile, size_t &maxThreads, size_t &maxLine,
 			size_t &kLen, ostream &out) {
   vector<future<void> > futs(maxThreads);
-  vector<ostringstream> ss(maxThreads);
   vector<vector<string> > chunks;
   vector<bool> inUse;
   size_t curThread = 0, curLine = 0;
@@ -102,22 +101,19 @@ static void kmersExpand(istream &infile, size_t &maxThreads, size_t &maxLine,
     getline(infile, chunks[curThread][curLine]);
     ++curLine;
     if (curLine == maxLine) {
-      startNewThread(ss[curThread], chunks[curThread], futs[curThread],
-		     inUse, curThread, curLine, kLen, out);
+      startNewThread(chunks[curThread], futs[curThread], inUse, curThread,
+		     curLine, kLen, out);
       curLine = 0;
       curThread = (curThread + 1) % maxThreads;
     }
   }
   if (curLine && curLine != maxLine)
-    startNewThread(ss[curThread], chunks[curThread], futs[curThread],
+    startNewThread(chunks[curThread], futs[curThread],
 		   inUse, curThread, curLine, kLen, out);
   for (size_t i = 0; i < maxThreads; ++i)
     if (inUse[i]) {
       futs[i].get();
       cerr << "Thread " << i << " complete"<< endl;
-      out << ss[i].str();
-      ss[i].str("");
-      ss[i].clear();
     }
   cerr << "End of program" << endl;
 }

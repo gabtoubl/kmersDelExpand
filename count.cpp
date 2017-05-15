@@ -86,4 +86,5 @@ void kmersDel(istream &infile, size_t &maxThreads, size_t &maxLine, ostream &out
       futs[i].get();
       cerr << "Thread " << i << " complete"<< endl;
     }
+  cerr << "End of program" << endl;
 }
