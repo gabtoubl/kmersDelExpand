@@ -4,13 +4,9 @@
 #include <unistd.h>
 #include <iostream>
 #include <algorithm>
-
-#include "kmersCount.hpp"
+#include "kmers.hpp"
 
 using namespace std;
-
-size_t k = 16;
-string seed = "";
 
 static void setMaxLine(ifstream &infile, size_t &maxLine, size_t &maxThreads) {
   maxLine = count(istreambuf_iterator<char>(infile),
@@ -23,41 +19,42 @@ static void setMaxLine(ifstream &infile, size_t &maxLine, size_t &maxThreads) {
 
 static int usage() {
   cerr << "usage: ./kmersDel OPTIONS" << endl
-       << "-> mandatory: -k KMERLEN  Length of k-mers (either -k or -s)" << endl
-       << "              -s KMERSEED Seed for spaced kmers (either -k or -s)" << endl
+       << "-> mandatory: -s KMERSEED Seed for spaced kmers" << endl
        << "-> optional:  -i INFILE   Input File in FASTA format, default stdin" << endl
        << "              -o OUTFILE  Output File, default stdout" << endl
        << "              -j THREADS  Number of threads, default 1" << endl
-       << "              -L MINOCC   Minimum number of occurences, default 1" << endl
        << "              -h          Help: This usage message" << endl;
   return EXIT_FAILURE;
 }
 
 int main(int ac, char **av) {
-  bool flagInfile = false, flagOutfile = false, flagOpt = false;
-  size_t maxThreads = 1, maxLine = 100000, kLen;
-  ifstream infile;
+  bool flagInfile = false, flagOutfile = false, flagSeed = false;
+  size_t maxThreads = 1, maxLine = 100000, seedLen;
   ofstream outfile;
+  ifstream infile;
+  string seed;
   char opt;
 
   while ((opt = getopt(ac, av, "j:k:s:i:o:L:h")) != -1) {
     switch (opt) {
     case 'j': setMaxThreads(optarg, maxThreads); break;
-    case 'k': setKmerLength(optarg, kLen, flagOpt); break;
-    case 's': setSeed(optarg, kLen, flagOpt); break;
+    case 's': setSeed(optarg, seed, seedLen, flagSeed); break;
     case 'i': setInfile(optarg, infile, flagInfile); break;
     case 'o': setOutfile(optarg, outfile, flagOutfile); break;
     case 'h':
     default : return usage();
     }
   }
-  if (!flagOpt)
+  if (!flagSeed)
     return usage();
   if (!flagInfile)
     cerr << "Using Standard Input as FASTA file" << endl;
   else
     setMaxLine(infile, maxLine, maxThreads);
-  kmersDel(flagInfile ? infile : cin, maxThreads, maxLine, flagOutfile ? outfile : cout);
+  seedLen = seed.length();
+  kmersDel(seed, maxThreads, maxLine, seedLen,
+	   flagInfile ? infile : cin,
+	   flagOutfile ? outfile : cout);
   if (flagInfile)
     infile.close();
   if (flagOutfile)

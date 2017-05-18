@@ -6,22 +6,13 @@
 
 using namespace std;
 
-extern size_t k;
-extern string seed;
-
 void setMaxThreads(string optarg, size_t &maxThreads) {
   maxThreads = stoi(optarg);
   maxThreads = maxThreads < 1 ? 1 : maxThreads;
 }
 
-void setKmerLength(string optarg, size_t &kLen, bool &flagOpt) {
-  flagOpt ^= true;
-  k = stoi(optarg);
-  kLen = k;
-}
-
-void setSeed(string optarg, size_t &kLen, bool &flagOpt) {
-  flagOpt ^= true;
+void setSeed(string optarg, string &seed, size_t &kLen, bool &flagSeed) {
+  flagSeed = true;
   seed = optarg;
   kLen = seed.length() - count(seed.begin(), seed.end(), '0');
 }
