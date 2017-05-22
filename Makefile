@@ -1,9 +1,10 @@
 NAME=		kmersDel
 NAME2=		kmersExpand
 SRCS=		del.cpp        \
-		count.cpp      \
+		threads.cpp    \
 		options.cpp
 SRCS2=		expand.cpp     \
+		threads.cpp    \
 		options.cpp
 OBJS=		$(SRCS:.cpp=.o)
 OBJS2=		$(SRCS2:.cpp=.o)
